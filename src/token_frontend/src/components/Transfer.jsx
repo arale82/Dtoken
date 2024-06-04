@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { token_backend } from "../../../declarations/token_backend";
+import { token_backend, canisterId, createActor } from "../../../declarations/token_backend";
+import { AuthClient } from "@dfinity/auth-client";
 import { Principal } from "@dfinity/principal";
 
 function Transfer() {
@@ -10,9 +11,19 @@ function Transfer() {
   
   async function handleClick() {
     setLoading(true);
+    
+    const authClient = await AuthClient.create();
+    const identity = authClient.getIdentity();
+
+    const authCanister = createActor(canisterId, {
+      agentOptions : {
+        identity,
+      },
+    });
+
     if(inputToValue && inputAmountValue){
       const principal = Principal.fromText(inputToValue);
-      const result = await token_backend.transfer(principal, parseInt(inputAmountValue));
+      const result = await authCanister.transfer(principal, parseInt(inputAmountValue));
       setTransferResult(result);
     } else {
       setTransferResult("Please insert a Principal ID and amount.");
